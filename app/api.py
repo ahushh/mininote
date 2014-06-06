@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 import json
 from bson import ObjectId
 
@@ -9,23 +10,22 @@ from app import mininote
 from app import model
 
 
-@mininote.route('/notes/', methods=['GET'])
+@mininote.route('/notes', methods=['GET'])
 def get_all_notes():
     if model.Note.objects.count() == 0:
-        return Response(json.dumps({"ATENTION": "You have not any notes."}),  mimetype='application/json')
+        return Response(json.dumps([]),  mimetype='application/json')
     notes = [note.to_mongo() for note in model.Note.objects]
 
     for note in notes:
         note['note_id'] = str(note['_id'])
         del note['_id']
-        del note['body']
-        note['creation_time'] = str(note['creation_time'])
-        note['modification_time'] = str(note['modification_time'])
+        note['creation_time'] = int(note['creation_time'].strftime("%s")) * 1000
+        note['modification_time'] = int(note['modification_time'].strftime("%s")) * 1000
 
     return Response(json.dumps(notes),  mimetype='application/json')
 
 
-@mininote.route('/notes/<note_id>/', methods=['GET'])
+@mininote.route('/notes/<note_id>', methods=['GET'])
 def get_note(note_id):
     if not ObjectId.is_valid(note_id):
         abort(404)
@@ -36,13 +36,13 @@ def get_note(note_id):
 
     note['note_id'] = str(note['_id'])
     del note['_id']
-    note['creation_time'] = str(note['creation_time'])
-    note['modification_time'] = str(note['modification_time'])
+    note['creation_time'] = int(note['creation_time'].strftime("%s")) * 1000
+    note['modification_time'] = int(note['modification_time'].strftime("%s")) * 1000
 
     return Response(json.dumps(note),  mimetype='application/json')
 
 
-@mininote.route('/new/', methods=['POST'])
+@mininote.route('/notes', methods=['POST'])
 def make_note():
     try:
         body = request.json['body']
@@ -58,7 +58,7 @@ def make_note():
     return Response(json.dumps({"SUCCESS": "You made a new note"}), mimetype='application/json')
 
 
-@mininote.route('/notes/<note_id>/', methods=['POST'])
+@mininote.route('/notes/<note_id>', methods=['PUT'])
 def edit_note(note_id):
     if not ObjectId.is_valid(note_id):
         abort(400)
@@ -80,7 +80,7 @@ def edit_note(note_id):
     return Response(json.dumps({"SUCCESS": "Note was modified"}), mimetype='application/json')
 
 
-@mininote.route('/notes/<note_id>/', methods=['DELETE'])
+@mininote.route('/notes/<note_id>', methods=['DELETE'])
 def delete_note(note_id):
     if not ObjectId.is_valid(note_id):
         abort(400)
@@ -92,7 +92,7 @@ def delete_note(note_id):
     return Response(json.dumps({"SUCCESS": "Note was deleted"}), mimetype='application/json')
 
 
-@mininote.route('/about/', methods=['GET'])
+@mininote.route('/about', methods=['GET'])
 def get_info():
     info_about = {
     "name": "Mininote",
@@ -108,7 +108,7 @@ def get_info():
     return Response(json.dumps(info_about), mimetype='application/json')
 
 
-@mininote.route('/coffee/', methods=['GET'])
+@mininote.route('/coffee', methods=['GET'])
 def teapot():
 	abort(418)
 
